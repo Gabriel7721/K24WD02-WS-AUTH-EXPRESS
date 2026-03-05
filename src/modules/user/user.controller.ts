@@ -1,5 +1,5 @@
 import type { UserService } from "./user.service.js";
-import { ok } from "../../utils/http.js";
+import { ApiError, ok } from "../../utils/http.js";
 import type { ActionController } from "../../types/express.js";
 
 export class UserController {
@@ -35,7 +35,7 @@ export class UserController {
   getByEmail: ActionController = async (req, res) => {
     const userEmail = req.params.email;
     const user = await this.userService.getByEmail(userEmail!);
-    res.json(ok(this.toUserDto(user.email)));
+    res.json(ok(this.toUserDto( user )));
   };
 
   updatePut: ActionController = async (req, res) => {
@@ -51,6 +51,11 @@ export class UserController {
 
   updatePatch: ActionController = async (req, res) => {
     const userId = req.params.id;
+
+    if (req.auth?.userId !== userId) {
+      throw new ApiError(403, { message: "You are not allowed to editing." });
+    }
+
     const { email, password, role } = req.body;
     const user = await this.userService.updatePatch(userId!, {
       email,

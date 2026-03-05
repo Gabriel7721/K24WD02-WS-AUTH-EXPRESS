@@ -1,4 +1,4 @@
-import { ok } from "../../utils/http.js";
+import { ApiError, ok } from "../../utils/http.js";
 export class UserController {
     userService;
     constructor(userService) {
@@ -30,7 +30,7 @@ export class UserController {
     getByEmail = async (req, res) => {
         const userEmail = req.params.email;
         const user = await this.userService.getByEmail(userEmail);
-        res.json(ok(this.toUserDto(user.email)));
+        res.json(ok(this.toUserDto(user)));
     };
     updatePut = async (req, res) => {
         const userId = req.params.id;
@@ -44,6 +44,9 @@ export class UserController {
     };
     updatePatch = async (req, res) => {
         const userId = req.params.id;
+        if (req.auth?.userId !== userId) {
+            throw new ApiError(403, { message: "You are not allowed to editing." });
+        }
         const { email, password, role } = req.body;
         const user = await this.userService.updatePatch(userId, {
             email,

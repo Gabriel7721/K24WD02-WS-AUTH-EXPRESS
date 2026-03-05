@@ -2,7 +2,7 @@ import { Router } from "express";
 import { UserDatabase } from "./user.database.js";
 import { UserService } from "./user.service.js";
 import { UserController } from "./user.controller.js";
-import { requireAuth } from "../../middlewares/auth.middleware.js";
+import { requireAuth, requireRole } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -14,12 +14,11 @@ router.get("/", controller.list);
 router.post("/register", controller.register);
 
 router.get("/:id", requireAuth, controller.getById);
-router.get("/by-email/:email", controller.getByEmail);
+router.get("/by-email/:email", requireAuth, controller.getByEmail);
 
 router.put("/:id", requireAuth, controller.updatePut);
 router.patch("/:id", requireAuth, controller.updatePatch);
 
-router.delete("/:id", requireAuth, controller.delete);
+router.delete("/:id", requireAuth, requireRole("admin"), controller.delete);
 
 export const userRouters = router;
-
