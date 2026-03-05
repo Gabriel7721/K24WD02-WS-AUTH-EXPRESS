@@ -54,5 +54,30 @@ export function attachWsServer(server: http.Server) {
       email: user?.email,
       role: user?.role,
     };
+
+    // Event: Message
+    ws.on("message", async (raw) => {
+      const msg = safeJsonParse(raw) as Inbound | null;
+      if (!ws.user) return;
+      if (!msg) return;
+
+      const saved = await chatService.postMessage({
+        userId: ws.user?.userId,
+        userEmail: ws.user?.email,
+        role: ws.user?.role,
+        text: msg?.text,
+      });
+
+      broadCast({
+        type: "message",
+        data: {
+          id: saved._id.toString(),
+          userEmail: saved.userEmail,
+          role: saved.role,
+          text: saved.text,
+          createdAt: saved.createdAt,
+        },
+      });
+    });
   });
 }
