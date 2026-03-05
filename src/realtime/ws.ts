@@ -3,6 +3,7 @@ import type http from "node:http";
 import { UserDatabase } from "../modules/user/user.database.js";
 import ChatService from "../modules/chat/chat.service.js";
 import { ChatDatabase } from "../modules/chat/chat.database.js";
+import { verifyAccessToken } from "../utils/jwt.js";
 
 type WsClient = WebSocket & {
   user?: { userId: string; email: string; role: "customer" | "admin" };
@@ -33,4 +34,25 @@ export function attachWsServer(server: http.Server) {
       if (c.readyState === WebSocket.OPEN) c.send(payload);
     }
   };
+
+  // Event: Connection
+  wss.on("connection", async (ws: WsClient, req) => {
+    const url = new URL(req.url ?? "", `http://${req.headers.host}`);
+    const token = url.searchParams.get("token");
+    // http://localhost:9999/api/chat/messages?token=<ACCESS_TOKEN>
+    if (!token) return ws.close(1008, "Missing Token");
+
+    let jwt: { sub: string; role: "customer" | "admin" };
+
+    jwt = verifyAccessToken(token);
+    const user = await userDb.findById(jwt.sub);
+    if (!user) {
+      return ws.close(1008, "User not found");
+    }
+    ws.user = {
+      userId: user?._id.toString(),
+      email: user?.email,
+      role: user?.role,
+    };
+  });
 }
