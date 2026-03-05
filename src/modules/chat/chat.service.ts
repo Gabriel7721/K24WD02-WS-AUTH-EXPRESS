@@ -1,10 +1,24 @@
+import { ApiError } from "../../utils/http.js";
 import type { ChatDatabase } from "./chat.database.js";
 
 export default class ChatService {
   constructor(private readonly chatDb: ChatDatabase) {}
 
   async postMessage() {}
-  async listHistory() {}
+  async listHistory(input: { limit?: string; before?: string }) {
+    const limit = Number(this.parsePositiveInt(input.limit, 50, 200));
+    let beforeDate: Date | undefined;
+
+    if (input.before) {
+      const d = new Date(input.before);
+      if (Number.isNaN(d.getTime())) {
+        throw new ApiError(400, { message: "Invalid before ISO date" });
+      }
+      beforeDate = d;
+    }
+
+    return this.chatDb.list({ before: beforeDate, limit });
+  }
   // => limit(500,50,200) => limit(200)
   // => limit("one",50,200) => limit(50)
   async parsePositiveInt(v: string | undefined, fallback: number, max: number) {
