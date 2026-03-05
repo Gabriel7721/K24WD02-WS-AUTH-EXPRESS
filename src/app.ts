@@ -4,6 +4,7 @@ import express from "express";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { userRouters } from "./modules/user/user.routes.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
+import { chatRoutes } from "./modules/chat/chat.routes.js";
 
 export function createApp() {
   const app = express();
@@ -17,6 +18,7 @@ export function createApp() {
 
   app.use("/api/users", userRouters);
   app.use("/api/auth", authRoutes);
+  app.use("/api/chat", chatRoutes);
 
   app.use(errorMiddleware);
 

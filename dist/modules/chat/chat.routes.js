@@ -7,5 +7,5 @@ const db = new ChatDatabase();
 const service = new ChatService(db);
 const controller = new ChatController(service);
 router.get("/messages", controller.listMessages);
-export const chatRouter = router;
+export const chatRoutes = router;
 //# sourceMappingURL=chat.routes.js.map
