@@ -1,10 +1,29 @@
+import { ObjectId } from "mongodb";
 import { ApiError } from "../../utils/http.js";
 export default class ChatService {
     chatDb;
     constructor(chatDb) {
         this.chatDb = chatDb;
     }
-    async postMessage() { }
+    async postMessage(input) {
+        const text = (input.text ?? "").trim();
+        if (!text) {
+            throw new ApiError(400, { message: "Message text is required" });
+        }
+        if (text.length > 2000) {
+            throw new ApiError(400, {
+                message: "Message text is too long (> 200 characters)",
+            });
+        }
+        const now = new Date();
+        return this.chatDb.insert({
+            userId: new ObjectId(input.userId),
+            userEmail: input.userEmail,
+            role: input.role,
+            text,
+            createdAt: now,
+        });
+    }
     async listHistory(input) {
         const limit = Number(this.parsePositiveInt(input.limit, 50, 200));
         let beforeDate;
